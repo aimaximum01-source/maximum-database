@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MAXimum AI — База специалистов</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700&family=Inter:wght@300;400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d0d0f; --surface: #16161a; --surface2: #1e1e24;
+    --border: #2a2a35; --accent: #c8ff00; --accent2: #7c6fff;
+    --text: #e8e8f0; --muted: #6b6b80; --tag-bg: #1e1e2a;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
+  .header { padding: 16px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 10; }
+  .logo { font-family: 'Unbounded', sans-serif; font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
+  .search-row { display: flex; gap: 8px; }
+  .search-wrap { position: relative; flex: 1; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  input[type="text"] { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 12px 9px 32px; border-radius: 8px; outline: none; }
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--muted); }
+  .ai-btn { padding: 9px 14px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-family: 'Unbounded', sans-serif; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .ai-btn:disabled { opacity: 0.5; }
+  .tabs { display: flex; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; background: var(--surface); }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .tab.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+  .filters { display: flex; gap: 6px; padding: 8px 16px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; background: var(--surface); }
+  .filters::-webkit-scrollbar { display: none; }
+  .chip { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; white-space: nowrap; }
+  .chip.on { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .ai-result { margin: 10px 16px; padding: 12px; background: #0f1a00; border: 1px solid #2a3d00; border-radius: 10px; color: var(--accent); font-size: 12px; line-height: 1.7; display: none; }
+  .ai-result.show { display: block; }
+  .ai-label { font-size: 10px; color: var(--muted); margin-bottom: 6px; font-family: 'Unbounded', sans-serif; }
+  .grid { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; }
+  .card.expanded { border-color: var(--accent); }
+  .card-name { font-family: 'Unbounded', sans-serif; font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+  .card-role { color: var(--muted); font-size: 11px; line-height: 1.4; margin-bottom: 10px; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { padding: 2px 8px; border-radius: 4px; background: var(--tag-bg); color: var(--muted); font-size: 10px; border: 1px solid var(--border); }
+  .tag.tech { color: #7c6fff; border-color: #2d2a4a; background: #1a1828; }
+  .tag.level { color: var(--accent); border-color: #2a3300; background: #151a00; }
+  .card-details { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+  .card.expanded .card-details { display: block; }
+  .detail-row { display: flex; gap: 8px; padding: 5px 0; border-bottom: 1px solid #1a1a22; }
+  .detail-label { color: var(--muted); font-size: 11px; min-width: 70px; flex-shrink: 0; }
+  .detail-value { color: var(--text); font-size: 12px; word-break: break-word; flex: 1; }
+  .detail-value a { color: var(--accent2); text-decoration: none; }
+  .notes-block { margin-top: 10px; padding: 10px; background: var(--tag-bg); border-radius: 8px; border-left: 3px solid var(--accent2); color: #c0c0d0; font-size: 12px; line-height: 1.6; }
+  .stack-block { margin-top: 8px; padding: 8px 10px; background: #151522; border-radius: 8px; font-size: 11px; color: #a0a0c0; line-height: 1.6; }
+  .stack-lbl { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .contacts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .cbtn { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 11px; text-decoration: none; display: inline-block; }
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .status-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .dot.met { background: var(--accent); }
+  .dot.ready { background: #00e5a0; }
+  .dot.pending { background: #ffaa00; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">✦ MAXimum AI STUDIO</div>
+  <div class="search-row">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search" placeholder="Имя, роль, стек, навык..." />
+    </div>
+    <button class="ai-btn" id="ai-btn" onclick="doAI()">✦ AI</button>
+  </div>
+</div>
+<div class="tabs" id="tabs"></div>
+<div class="filters" id="filters"></div>
+<div class="ai-result" id="ai-result"><div class="ai-label">✦ AI-рекомендация</div><div id="ai-text"></div></div>
+<div class="grid" id="grid"></div>
+
+<script>
+const PEOPLE = [
+  { name:"Игорь Агамалиев", cat:"dev", role:"Principal Solutions Architect / AI Lead", exp:"8+ лет", format:"Фриланс/контракт/под ключ", source:"Zerocoder", stack:"Python 3.11+, Go, CatBoost, XGBoost, YOLOv8, LLM/RAG, FastAPI, Django, PostgreSQL, ClickHouse, Docker, Kubernetes, Kafka", companies:"Yandex Go, Revolut, Ozon Tech, Aure Studio", edu:"МФТИ (Физтех)", notes:"Скоринг 0-100 для FinTech/BNPL, CV для пром. безопасности (YOLOv8+Jetson), логистика −15% затрат, голосовые AI-боты для медцентров.", tags:["Python","ML/AI","FinTech","Docker","Kubernetes"], level:"Senior", status:"met", record:"https://drive.google.com/drive/folders/1runAkSEylS5qy29RjHf6TDay-BPg19kw" },
+  { name:"Михаил Григорьев", cat:"dev", role:"Senior AI/ML инженер / Python Backend", tg:"https://t.me/mikegrigorev", tg_l:"@mikegrigorev", phone:"+972539620915", email:"g19732906@gmail.com", source:"Zerocoder", stack:"Python, GPT/Claude/Gemini, LLaMA, CatBoost, n8n, SMAIPL, Telegram/Bitrix/AmoCRM", notes:"Скоринговые системы, AI-анализ чертежей, HR-скоринг резюме, тренажёры для собеседований, секретарь-бот, контент-бот с DALL-E.", tags:["Python","ML/AI","n8n","CRM","Telegram-бот"], level:"Senior", status:"met", resume:"https://hh.ru/resume/1c569b4fff0dfbd4220039ed1f6a6b71703153", record:"https://drive.google.com/drive/folders/1runAkSEylS5qy29RjHf6TDay-BPg19kw" },
+  { name:"Сергей Лансков", cat:"dev", role:"Python Developer / No-code разработчик", email:"backend.serge@gmail.com", phone:"+66628248927", location:"Бангкок", source:"Zerocoder", stack:"Python, FastAPI, n8n, Make, Bubble, LangChain, RAG, Docker, LoRA fine-tuning, HubSpot/Bitrix/Pipedrive", notes:"Бот-психолог, бот-диетолог с анализом фото, реферальная система 5 уровней, AI-анализ голоса, LoRA fine-tuning.", tags:["Python","n8n","RAG","Bubble","LoRA"], level:"Middle+", status:"met", resume:"https://drive.google.com/file/d/1WSY1fKqZ8brYc2Vb_f0wqjHX4iPDbcRi/view", record:"https://drive.google.com/drive/folders/1mYQQE62tDiRyv2rRUGdexrkyzEAJK2qJ" },
+  { name:"Виктор Кинцель", cat:"dev", role:"Backend/ML инженер", tg_l:"@alastorz", phone:"89161222365", stack:"Python, ML (табличные данные), Telegram-боты, Docker, RAG, GigaChat, Bybit API, Stripe", notes:"Торговый бот (Telegram→Bybit), RAG-сервисы, сайты с оплатой Stripe+Docker. Высокая усидчивость, доводит AI до продакшена.", tags:["Python","ML/AI","Telegram-бот","RAG","Docker"], level:"Middle+", status:"met", record:"https://drive.google.com/drive/folders/1jgIwMoOnbMiuoCNDrxbugiWcuLw-BBq8" },
+  { name:"Валерий Веденеев", cat:"dev", role:"Senior Full-stack / Backend + Data/ML", format:"Один исполнитель под ключ", stack:"Python, API, Docker, облака, табличный ML, классификация", notes:"Enterprise-проекты (ERP, HR-AI). Полный цикл: анализ→модель→API→деплой→поддержка. Работает поэтапно.", tags:["Python","ML/AI","ERP","Docker","Enterprise"], level:"Senior", status:"met", record:"https://drive.google.com/drive/folders/1UXjcHEy0CH_ubQAqyUsAxhOrGhCz7HdZ" },
+  { name:"Игорь Доронин", cat:"dev", role:"AI/ML-разработчик + Frontend", tg_l:"@IharD32", email:"ihardaronin@gmail.com", source:"Zerocoder", stack:"Python, TensorFlow, PyTorch, Keras, OpenCV, FastAPI, React, NextJS, TypeScript, Docker, EasyOCR", notes:"Начинает коммерческие проекты. Поиск кандидатов по LLM, бот для кафе, нейроассистент отдела продаж. Изучает n8n.", tags:["Python","ML/AI","React","Frontend","OpenCV"], level:"Junior/Middle", status:"met", record:"https://drive.google.com/drive/folders/1runAkSEylS5qy29RjHf6TDay-BPg19kw" },
+  { name:"Дмитрий (Битрикс)", cat:"dev", role:"Bitrix24-специалист / Системный интегратор", exp:"27+ лет", stack:"Bitrix24, AMO CRM, 1С (прямая интеграция), чат-боты, нейропомощники, SQL", notes:"Встреча 30.01.26. Интеграция Bitrix+нейро для производителя детской одежды (Казахстан+Россия). Bitrix напрямую с 1С, без швов.", tags:["Bitrix24","1С","AMO CRM","Интеграции"], level:"Senior", status:"met" },
+  { name:"Алтынбек", cat:"dev", role:"Автоматизатор n8n / Контент-завод", stack:"n8n, GPT, Claude, Sora/Veo, ElevenLabs, Google Sheets, Telegram, AMO CRM, Instagram/VK/LinkedIn постинг", notes:"Контент-заводы, e-агенты, CRM-автоматизация. Маршрут: тема→текст→редактура→генерация→постинг. Активно работает со студией.", tags:["n8n","Контент-завод","CRM","Telegram-бот","GPT"], level:"Middle", status:"met", record:"https://drive.google.com/drive/folders/1EK3UNqI3TfB_-prutKCF_UiyiLHYQqDb" },
+  { name:"Даниил", cat:"dev", role:"Разработчик автоматизаций / no-code + code", stack:"Telegram-боты, серверная логика, БД, интеграции, 152-ФЗ, российская инфраструктура", notes:"Автоподписание договоров за 3-4 мин вместо 10-20. Контент-заводы, воронки, автообзвоны, риэлторы, кастомные CRM.", tags:["Автоматизация","Договоры","CRM","Telegram-бот"], level:"Middle", status:"met", record:"https://drive.google.com/drive/folders/1BWphrcBGAdEsiIx50lCELJzTC86I81UN" },
+  { name:"Стас", cat:"dev", role:"Технический интегратор", stack:"N8N, ChatGPT/Claude, боты, Bitrix/AMO, API, webhooks", notes:"Бот, реферальная программа, воронка, техническая инфраструктура. Рассматривался для проекта Дины.", tags:["n8n","Bitrix24","AMO CRM","Боты"], level:"Middle", status:"met", record:"https://drive.google.com/drive/folders/1gGmKaFeEuhquVD_3wlff-mn7Q9cNTABW" },
+  { name:"Тимур Гараев", cat:"dev", role:"Python / No-code автоматизатор", tg:"https://t.me/vearag", tg_l:"@vearag", phone:"8(915)634-36-50", source:"УИИ — Настя", stack:"Python, N8N, Keras, Docker, Telegram-боты, голосовые боты, Яндекс.Директ", notes:"MVP голосового бота для клиента (аренда РОПов) — прозвон холодной базы через AMO CRM. Обучается LP Tracker.", tags:["Python","n8n","Голосовой бот","AMO CRM"], level:"Junior/Middle", status:"met", resume:"https://hh.ru/resume/71939cc1ff0ea4a80d0039ed1f766259486d77", record:"https://drive.google.com/drive/folders/1QoNgNnUB03mNCfqwfpupeDvSXPA-WtvD" },
+  { name:"Борис Пасечник", cat:"dev", role:"No-code / Контент-автоматизатор", tg_l:"@NameisBoris", phone:"+79096235734", email:"borisworknow@gmail.com", source:"Лена", stack:"N8N, GPT, Claude, ElevenLabs, Midjourney, DALL·E, RunwayML, Kling AI, Veo3, Telegram, Gamma, Tilda", notes:"Контент-заводы и ИИ-боты. Получил тестовое задание — минимальный контент-завод. Опыт 3-6 мес.", tags:["n8n","Контент-завод","Видео-AI","Telegram-бот"], level:"Junior", status:"met", resume:"https://www.linkedin.com/in/boris-pasechnik-022927256/", record:"https://drive.google.com/drive/folders/1s7YNRWH9W_Kv0nSnfBWphnBiXK9_YdyA" },
+  { name:"Павел Бирук", cat:"dev", role:"Junior AI Automation / n8n Developer", tg_l:"@Pavelltt", phone:"+7 (985) 826-95-70", email:"vinrolls98@gmail.com", location:"Москва", stack:"n8n, RAG, OpenAI API, Anthropic API, Python, SQL, Docker, Supabase, Telegram Bot API", notes:"Pet-проекты: AI-скоринг заказов, RAG-ассистент, Voice-to-Task (Whisper→GPT→Notion). Студент МТУСИ.", tags:["n8n","RAG","Python","Docker","OpenAI"], level:"Junior", status:"met", resume:"https://drive.google.com/file/d/15mtTyGX188syNwPIF6hTQkdV0BMK2GFN/view", record:"https://drive.google.com/drive/folders/1SYEZWUTqq-A6rA1pzj4sfJfsemrwyrun" },
+  { name:"Самат", cat:"dev", role:"No-code / Python (начальный уровень)", source:"Trueman", stack:"n8n, Python, простые интеграции и боты", notes:"Простые интеграции. Не тянет шифрование и сложные API.", tags:["n8n","Python","Боты"], level:"Junior", status:"met" },
+  { name:"Влад Тарасьев", cat:"dev", role:"Бизнес-ассистент / Операционный менеджер", tg:"https://t.me/absoLute_ages", tg_l:"@absoLute_ages", phone:"+7 (910) 1193659", email:"vladtar2001@gmail.com", location:"Брянск → Москва", exp:"4 года 7 мес", salary:"60 000 ₽", source:"ZEROCODER", stack:"AMO CRM, Bitrix24, N8N, Telegram Bot API, Google Sheets, Excel, iiko, Sipuni", notes:"Вернул 1.9 млн ₽ дебиторки, ручной труд −65%, автоматизировал зарплату. EcoFamilySchool: траты с 60к до 5к/мес.", tags:["CRM","N8N","Автоматизация","Операционка"], level:"Middle", status:"met", resume:"https://docs.google.com/document/d/1_z4FID6yGAEnxbQg7EaX7sRNIW0BB7mxIy_Vm16Rb2A/edit" },
+  { name:"Николай Катмичев", cat:"dev", role:"Project Manager / Product Analyst", tg_l:"@nikolay_akk", phone:"+79871210077", email:"katmichevnik@gmail.com", source:"Лена", stack:"Пресейл, управление командой 7+ разработчиков, структурирование задач, бюджет, сроки", notes:"Не разработчик. Ведёт пресейл и команду (7 чел + партнёр Александр).", tags:["PM","Пресейл","Аналитика","Команда"], level:"Middle+", status:"met" },
+  { name:"Елена Хромова", cat:"consulting", role:"AI-стратег / Бизнес-аудитор", tg_l:"@elenakhrom", stack:"ChatGPT (30+ агентов), DeepSeek, Perplexity, Gemini, Midjourney, N8N, Make", notes:"Операционный директор/РОП в прошлом. Аудит, стратегия автоматизации, нейропродавцы, ТЗ. Первая диагностика совместно с Леной и Настей.", tags:["AI-стратегия","Аудит","Автоматизация","Нейропродавцы"], level:"Senior", status:"met" },
+  { name:"Александр Селезнёв", cat:"marketing", role:"Маркетолог / AI-стратег / Боты и воронки", tg_l:"redsea1970", source:"ZEROCODER", stack:"Квизы, лид-магниты, ИИ-боты, контент-заводы, тон-оф-войс, n8n", notes:"Первый проект — кейс Гульнары. Параллельно: MVP лид-магнит-бот и контент-завод.", tags:["Маркетинг","Боты","Воронки","Контент"], level:"Middle", status:"met" },
+  { name:"Мария Коротаева", cat:"marketing", role:"Маркетолог / Руководитель отдела маркетинга", email:"maria.s.korotaeva@gmail.com", phone:"+7 985 295 15 81", location:"Москва", exp:"14+ лет", stack:"Digital, e-commerce, performance, брендинг, SEO, CRM, UX, data-driven", companies:"Samsung Electronics, Haier, Oney Bank, Toshiba, Peugeot, Vinci-NWCC", notes:"Продажи +5% Vinci-NWCC, +13% узнаваемость Haier, запуск e-commerce с нуля. 3 магистратуры: Сорбонна, РЭУ, НГЛУ.", tags:["Маркетинг","e-commerce","Бренд","Performance"], level:"Senior", status:"met" },
+  { name:"Маргарита", cat:"marketing", role:"Стратегический маркетолог / Консультант", exp:"Директор по маркетингу → фриланс", statusLabel:"✅ Заинтересована", stack:"AI-агенты, n8n, стратегический маркетинг, FMCG, фарма, бьюти, IT", notes:"Система: ЦА→позиционирование→архитектура. Обучается AI-агентам и n8n. Договорились об участии.", tags:["Маркетинг","Стратегия","AI-агенты","n8n"], level:"Senior", status:"ready" },
+  { name:"Ольга (Витебск)", cat:"marketing", role:"Маркетолог / Упаковка / Воронки", exp:"10+ лет", statusLabel:"⏳ Ждёт вводных", stack:"Продуктовая упаковка, позиционирование, автоворонки, УТП", notes:"Подход 'от смысла к системе'. Готова при чёткой структуре.", tags:["Маркетинг","Воронки","Упаковка"], level:"Senior", status:"pending" },
+  { name:"Оксана", cat:"marketing", role:"Системный маркетолог / РОП", exp:"15+ лет", statusLabel:"✅ Готова, КП сделала", stack:"N8N, нейропродавцы, продуктовая линейка, сегментация ЦА, скрипты, CRM", notes:"Системный: распаковка→CRM→команда. Готова брать ответственность за результат.", tags:["Маркетинг","Продажи","CRM","N8N"], level:"Senior", status:"ready" },
+  { name:"Дарья (Испания)", cat:"marketing", role:"Стратег-аналитик / Маркетинговый консультант", statusLabel:"⏳ Взяла паузу", notes:"Консалтинг, аудиты, маркетинг с нуля. Требует доверия к продукту. Живёт в Испании.", tags:["Маркетинг","Стратегия","Аудит"], level:"Senior", status:"pending" },
+  { name:"Ольга (SOHO MBA)", cat:"marketing", role:"Бизнес-стратег / AI-консультант", statusLabel:"✅ Активна", exp:"Фондовый рынок → PE → SOHO MBA (700+ консультаций)", stack:"ChatGPT, Perplexity, NeuroAgents, лендинги, ТЗ", notes:"Подход: диагностика→стратегия→дорожная карта. База ~200 подрядчиков. Ценник: 3 мес = 300к, разовые от 40к.", tags:["Стратегия","AI-консультации","Бизнес-аудит"], level:"Senior", status:"ready" },
+  { name:"Пётр (стратег)", cat:"marketing", role:"Маркетолог-стратег / Бренд-консультант", exp:"15 лет. Nestle, Coca-Cola, Tele2, IKEA", statusLabel:"✅ Готов как стратег", notes:"Фасилитация бренд-платформ, позиционирование. Только стратегия, не операционка.", tags:["Стратегия","Бренд","Фасилитация"], level:"Senior", status:"ready" },
+];
+
+const CATS = [{id:"all",label:"Все"},{id:"dev",label:"👨‍💻 Разработчики"},{id:"marketing",label:"📣 Маркетологи"},{id:"consulting",label:"🔮 Консультанты"}];
+const CHIPS = ["Senior","Middle+","Middle","Junior","n8n","Python","ML/AI","CRM","Telegram-бот","Контент-завод","RAG","Воронки","Стратегия"];
+
+let cat="all", filters=new Set(), q="";
+
+function init(){
+  const te=document.getElementById("tabs");
+  CATS.forEach(c=>{const b=document.createElement("button");b.className="tab"+(c.id===cat?" active":"");b.textContent=c.label;b.onclick=()=>{cat=c.id;render();te.querySelectorAll(".tab").forEach((x,i)=>x.className="tab"+(CATS[i].id===cat?" active":""));};te.appendChild(b);});
+  const fe=document.getElementById("filters");
+  CHIPS.forEach(f=>{const b=document.createElement("button");b.className="chip";b.textContent=f;b.onclick=()=>{filters.has(f)?filters.delete(f):filters.add(f);b.className="chip"+(filters.has(f)?" on":"");render();};fe.appendChild(b);});
+  document.getElementById("search").addEventListener("input",e=>{q=e.target.value;document.getElementById("ai-result").classList.remove("show");render();});
+  render();
+}
+
+function filtered(){
+  let l=PEOPLE;
+  if(cat!=="all")l=l.filter(p=>p.cat===cat);
+  if(filters.size>0)l=l.filter(p=>[...(p.tags||[]),p.level||""].some(t=>[...filters].every(f=>t.toLowerCase().includes(f.toLowerCase())||[...(p.tags||[])].some(t2=>t2.toLowerCase().includes(f.toLowerCase())))));
+  if(q.trim()){const s=q.toLowerCase();l=l.filter(p=>[p.name,p.role,p.stack,p.notes,p.exp,(p.tags||[]).join(" ")].some(x=>x&&x.toLowerCase().includes(s)));}
+  return l;
+}
+
+function render(){
+  const list=filtered();
+  const g=document.getElementById("grid");
+  g.innerHTML="";
+  if(!list.length){g.innerHTML='<div class="empty">🔍 Никого не нашлось</div>';return;}
+  list.forEach(p=>{
+    const card=document.createElement("div");card.className="card";
+    const sc=p.status==="ready"?"ready":p.status==="pending"?"pending":p.met?"met":"";
+    let tags=(p.level?`<span class="tag level">${p.level}</span>`:"")+((p.tags||[]).map(t=>`<span class="tag tech">${t}</span>`).join(""))+(p.statusLabel?`<span class="tag">${p.statusLabel}</span>`:"");
+    let det="";
+    [["Роль",p.role],["Опыт",p.exp],["Локация",p.location],["Зарплата",p.salary],["Формат",p.format],["Источник",p.source],["Компании",p.companies],["Образование",p.edu]].forEach(([l,v])=>{if(v)det+=`<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-value">${v}</span></div>`;});
+    let contacts="";
+    if(p.tg)contacts+=`<a class="cbtn" href="${p.tg}" target="_blank">💬 ${p.tg_l||"TG"}</a>`;
+    else if(p.tg_l)contacts+=`<span class="cbtn">💬 ${p.tg_l}</span>`;
+    if(p.phone)contacts+=`<a class="cbtn" href="tel:${p.phone}">📞 ${p.phone}</a>`;
+    if(p.email)contacts+=`<a class="cbtn" href="mailto:${p.email}">📧 Email</a>`;
+    if(p.resume)contacts+=`<a class="cbtn" href="${p.resume}" target="_blank">📄 Резюме</a>`;
+    if(p.record)contacts+=`<a class="cbtn" href="${p.record}" target="_blank">🎥 Запись</a>`;
+    card.innerHTML=`
+      <div class="status-row"><div class="dot ${sc}"></div><div class="card-name">${p.name}</div></div>
+      <div class="card-role">${p.role}</div>
+      <div class="card-tags">${tags}</div>
+      <div class="card-details">
+        ${det}
+        ${p.stack?`<div class="stack-block"><div class="stack-lbl">Стек</div>${p.stack}</div>`:""}
+        ${p.notes?`<div class="notes-block">${p.notes}</div>`:""}
+        ${contacts?`<div class="contacts">${contacts}</div>`:""}
+      </div>`;
+    card.onclick=e=>{if(e.target.tagName==="A")return;card.classList.toggle("expanded");};
+    g.appendChild(card);
+  });
+}
+
+async function doAI(){
+  const sq=document.getElementById("search").value.trim();
+  if(!sq)return;
+  const btn=document.getElementById("ai-btn");btn.disabled=true;btn.textContent="...";
+  const ctx=PEOPLE.map(p=>`${p.name}: ${p.role}. Стек: ${p.stack||"—"}. ${p.notes||""}`).join("\n");
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:`Ты помощник команды AI-студии MAXimum. Запрос: "${sq}"\n\nСпециалисты:\n${ctx}\n\nКто лучше подходит и почему? До 5 предложений, по-русски.`}]})});
+    const d=await r.json();
+    document.getElementById("ai-text").textContent=d.content?.[0]?.text||"Нет ответа";
+    document.getElementById("ai-result").classList.add("show");
+  }catch(e){document.getElementById("ai-text").textContent="Ошибка запроса";document.getElementById("ai-result").classList.add("show");}
+  btn.disabled=false;btn.textContent="✦ AI";
+}
+
+if(window.Telegram?.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand();}
+init();
+</script>
+</body>
+</html>
